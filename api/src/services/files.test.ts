@@ -4,38 +4,35 @@ import { getTracker, MockClient, Tracker } from 'knex-mock-client';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FilesService, ItemsService } from '.';
 import { InvalidPayloadException } from '../exceptions';
+import { describe, beforeAll, afterEach, expect, it, vi, beforeEach, MockedFunction, SpyInstance } from 'vitest';
 
 vi.mock('exifr');
-vi.mock('../../src/database/index', () => {
-	return { getDatabaseClient: vi.fn().mockReturnValue('postgres') };
-});
-vi.mock('../../src/database/index');
 
 describe('Integration Tests', () => {
-	let db: vi.mocked<Knex>;
+	let db: MockedFunction<Knex>;
 	let tracker: Tracker;
 
-	beforeAll(async () => {
-		db = knex({ client: MockClient }) as vi.mocked<Knex>;
+	beforeAll(() => {
+		db = vi.mocked(knex({ client: MockClient }));
 		tracker = getTracker();
 	});
 
 	afterEach(() => {
 		tracker.reset();
-		jest.clearAllMocks();
+		vi.clearAllMocks();
 	});
 
 	describe('Services / Files', () => {
 		describe('createOne', () => {
 			let service: FilesService;
-			let superCreateOne: jest.SpyInstance;
+			let superCreateOne: SpyInstance;
 
 			beforeEach(() => {
 				service = new FilesService({
 					knex: db,
 					schema: { collections: {}, relations: [] },
 				});
-				superCreateOne = jest.spyOn(ItemsService.prototype, 'createOne').mockImplementation(jest.fn());
+				superCreateOne = vi.spyOn(ItemsService.prototype, 'createOne').mockReturnValue(Promise.resolve(1));
 			});
 
 			it('throws InvalidPayloadException when "type" is not provided', async () => {
@@ -67,7 +64,7 @@ describe('Integration Tests', () => {
 
 		describe('getMetadata', () => {
 			let service: FilesService;
-			let exifrParseSpy: vi.SpyInstance<any>;
+			let exifrParseSpy: SpyInstance<any>;
 
 			const sampleMetadata = {
 				CustomTagA: 'value a',
